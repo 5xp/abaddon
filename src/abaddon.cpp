@@ -488,6 +488,7 @@ void Abaddon::DiscordOnThreadUpdate(const ThreadUpdateData &data) {
 #ifdef WITH_VOICE
 void Abaddon::OnVoiceConnected() {
     m_audio.StartCaptureDevice();
+    m_audio.AddSSRC(0);
     ShowVoiceWindow();
 }
 

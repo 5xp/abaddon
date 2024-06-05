@@ -55,6 +55,7 @@ private:
 
     Gtk::CheckButton m_noise_suppression;
     Gtk::CheckButton m_mix_mono;
+    Gtk::CheckButton m_loopback;
 
     Gtk::Button m_disconnect;
 

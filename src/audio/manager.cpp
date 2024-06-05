@@ -228,7 +228,7 @@ void AudioManager::SetOpusBuffer(uint8_t *ptr) {
 }
 
 void AudioManager::FeedMeOpus(uint32_t ssrc, const std::vector<uint8_t> &data) {
-    if (!m_should_playback || ma_device_get_state(&m_playback_device) != ma_device_state_started) return;
+    if (!m_loopback && !m_should_playback || ma_device_get_state(&m_playback_device) != ma_device_state_started) return;
 
     std::lock_guard<std::mutex> _(m_mutex);
     if (m_muted_ssrcs.find(ssrc) != m_muted_ssrcs.end()) return;
@@ -459,7 +459,7 @@ void AudioManager::Enumerate() {
 }
 
 void AudioManager::OnCapturedPCM(const int16_t *pcm, ma_uint32 frames) {
-    if (m_opus_buffer == nullptr || !m_should_capture) return;
+    if (m_opus_buffer == nullptr || !m_loopback && !m_should_capture) return;
 
     const double gain = m_capture_gain;
 
@@ -522,7 +522,13 @@ void AudioManager::OnCapturedPCM(const int16_t *pcm, ma_uint32 frames) {
     if (payload_len < 0) {
         spdlog::get("audio")->error("encoding error: {}", payload_len);
     } else {
-        m_signal_opus_packet.emit(payload_len);
+        if (m_should_capture) {
+            m_signal_opus_packet.emit(payload_len);
+        }
+
+        if (m_loopback) {
+            FeedMeOpus(0, std::vector<uint8_t>(m_opus_buffer, m_opus_buffer + payload_len));
+        }
     }
 }
 
@@ -710,6 +716,14 @@ void AudioManager::SetMixMono(bool value) {
 
 bool AudioManager::GetMixMono() const {
     return m_mix_mono;
+}
+
+void AudioManager::SetLoopback(bool value) {
+    m_loopback = value;
+}
+
+bool AudioManager::GetLoopback() const {
+    return m_loopback;
 }
 
 AudioManager::type_signal_opus_packet AudioManager::signal_opus_packet() {

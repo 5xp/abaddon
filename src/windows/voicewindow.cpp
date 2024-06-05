@@ -91,6 +91,7 @@ VoiceWindow::VoiceWindow(Snowflake channel_id)
     , m_deafen("Deafen")
     , m_noise_suppression("Suppress Noise")
     , m_mix_mono("Mix Mono")
+    , m_loopback("Loopback")
     , m_disconnect("Disconnect")
     , m_channel_id(channel_id)
     , m_menu_view("View")
@@ -186,6 +187,11 @@ VoiceWindow::VoiceWindow(Snowflake channel_id)
         Abaddon::Get().GetAudio().SetMixMono(m_mix_mono.get_active());
     });
 
+    m_loopback.set_active(audio.GetLoopback());
+    m_loopback.signal_toggled().connect([this]() {
+        Abaddon::Get().GetAudio().SetLoopback(m_loopback.get_active());
+    });
+
     m_disconnect.signal_clicked().connect([this]() {
         Abaddon::Get().GetDiscordClient().DisconnectFromVoice();
     });
@@ -258,6 +264,7 @@ VoiceWindow::VoiceWindow(Snowflake channel_id)
     m_controls.add(m_deafen);
     m_controls.add(m_noise_suppression);
     m_controls.add(m_mix_mono);
+    m_controls.add(m_loopback);
     m_controls.pack_end(m_disconnect, false, true);
     m_main.pack_start(m_menu_bar, false, true);
     m_main.pack_start(m_controls, false, true);
